@@ -16,7 +16,7 @@ import numpy
 import warnings
 import xarray
 import heapq
-from functools import wraps
+#from functools import wraps
 
 def to_event_pages(get_event_cursor):
     """
@@ -32,7 +32,7 @@ def to_event_pages(get_event_cursor):
     -------
     get_event_pages : function
     """
-    @functools.wraps
+    #@wraps(get_event_cursor)
     def get_event_pages(*args, **kwargs):
         event_cursor = get_event_cursor(*args, **kwargs)
         while True:
@@ -58,7 +58,7 @@ def to_datum_pages(get_datum_cursor):
     -------
     get_datum_pages : function
     """
-    @functools.wraps
+    #@wraps(get_datum_cursor)
     def get_datum_pages(*args, **kwargs):
         datum_cursor = get_datum_cursor(*args, **kwargs)
         while True:
@@ -330,7 +330,7 @@ class RemoteBlueskyRun(intake.catalog.base.RemoteCatalog):
         if self._source_id is None:
             payload = dict(action='open', name=self.name,
                            parameters=self.parameters)
-            req = requests.post(urljoin(self.url, '/v1/source'),
+            req = requests.post(urljoin(self.url, 'v1/source'),
                                 data=msgpack.packb(payload, use_bin_type=True),
                                 **self.http_args)
             req.raise_for_status()

@@ -2,6 +2,9 @@ import event_model
 from intake_bluesky.core import documents_to_xarray
 
 
+def no_event_pages(descriptor_uid):
+    yield from ()
+
 def test_no_descriptors():
     run_bundle = event_model.compose_run()
     start_doc = run_bundle.start_doc
@@ -10,10 +13,10 @@ def test_no_descriptors():
         start_doc=start_doc,
         stop_doc=stop_doc,
         descriptor_docs=[],
-        event_docs=[],
+        get_event_pages=no_event_pages,
         filler=event_model.Filler({}),
         get_resource=None,
-        get_datum=None,
+        lookup_resource_for_datum=None,
         get_datum_pages=None)
 
 
@@ -29,8 +32,8 @@ def test_no_events():
         start_doc=start_doc,
         stop_doc=stop_doc,
         descriptor_docs=[descriptor_doc],
-        event_docs=[],
+        get_event_pages=no_event_pages,
         filler=event_model.Filler({}),
         get_resource=None,
-        get_datum=None,
+        lookup_resource_for_datum=None,
         get_datum_pages=None)

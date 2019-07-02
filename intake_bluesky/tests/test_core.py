@@ -1,9 +1,24 @@
 import event_model
-from intake_bluesky.core import documents_to_xarray
+import xarray
+import intake_bluesky.core as core
 
 
 def no_event_pages(descriptor_uid):
     yield from ()
+
+
+def event_page_gen(page_size, num_pages):
+    """
+    Generator event_pages for testing.
+    """
+    data_keys = ['x', 'y', 'z']
+    array_keys = ['seq_num', 'time', 'uid']
+    for i in range(num_pages):
+        yield {'descriptor': 'DESCRIPTOR',
+               **{key: list(range(i*page_size, (i+1)*page_size)) for key in array_keys},
+               'data': {key: list(range(page_size)) for key in data_keys},
+               'timestamps': {key: list(range(page_size)) for key in data_keys},
+               'filled': {key: list(range(page_size)) for key in data_keys}}
 
 
 def test_no_descriptors():
@@ -38,3 +53,17 @@ def test_no_events():
         get_resource=None,
         lookup_resource_for_datum=None,
         get_datum_pages=None)
+
+def test_interlace_event_page_chunks():
+    page_gens = [event_page_gen(10,5) for i in range(3)]
+    interlaced = core.interlace_event_page_chunks(*page_gens, chunk_size=3)
+
+    t0 = None
+    for chunk in interlaced:
+        t1 = chunk['time'][0]
+        if t0:
+            assert t1 > t0
+        t0 = t1
+
+
+

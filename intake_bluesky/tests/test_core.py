@@ -1,5 +1,4 @@
 import event_model
-import xarray
 import intake_bluesky.core as core
 from intake_bluesky.core import documents_to_xarray
 
@@ -55,8 +54,9 @@ def test_no_events():
         lookup_resource_for_datum=None,
         get_datum_pages=None)
 
+
 def test_interlace_event_page_chunks():
-    page_gens = [event_page_gen(10,5) for i in range(3)]
+    page_gens = [event_page_gen(10, 5) for i in range(3)]
     interlaced = core.interlace_event_page_chunks(*page_gens, chunk_size=3)
 
     t0 = None
@@ -65,6 +65,3 @@ def test_interlace_event_page_chunks():
         if t0:
             assert t1 > t0
         t0 = t1
-
-
-

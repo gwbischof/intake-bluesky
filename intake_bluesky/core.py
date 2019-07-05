@@ -383,12 +383,12 @@ class RemoteBlueskyRun(intake.catalog.base.RemoteCatalog):
     def _close(self):
         self.bag = None
 
-    def read_canonical(self):
+    def canonical(self):
         for i in range(self.npartitions):
             for name, doc in self._get_partition((i, False)):
                 yield name, doc
 
-    def read_raw(self):
+    def canonical_unfilled(self):
         for i in range(self.npartitions):
             for name, doc in self._get_partition((i, True)):
                 yield name, doc
@@ -548,17 +548,17 @@ class BlueskyRun(intake.catalog.Catalog):
                 getshell=True,
                 catalog=self)
 
-    def read_canonical(self):
+    def canonical(self):
         for i in range(self.npartitions):
             for name, doc in self.read_partition((i, False)):
                 yield name, doc
 
-    def read_raw(self):
+    def canonical_unfilled(self):
         for i in range(self.npartitions):
             for name, doc in self.read_partition((i, True)):
                 yield name, doc
 
-    def read_raw_partition(self, i):
+    def read_partition_unfilled(self, i):
         """Fetch one chunk of documents.
         """
         self._load()
@@ -611,7 +611,7 @@ class BlueskyRun(intake.catalog.Catalog):
         """
         i, raw = index
         if raw:
-            return self.read_raw_partition(i)
+            return self.read_partition_unfilled(i)
         self._load()
         payload = []
         start = i * self.PARTITION_SIZE

@@ -656,44 +656,37 @@ class BlueskyRun(intake.catalog.Catalog):
     def read_partition(self, index):
         """Fetch one chunk of documents.
         """
-        i, raw = index
-        if raw:
-            return self.read_partition_unfilled(i)
+        i, descriptor, filler, chunk_size = index
         self._load()
         payload = []
         start = i * self.PARTITION_SIZE
         stop = (1 + i) * self.PARTITION_SIZE
         if start < self._offset:
             payload.extend(
-                itertools.islice(
-                    itertools.chain(
-                        (('start', self._get_run_start()),),
-                        (('descriptor', doc) for doc in self._descriptors)),
-                    start,
-                    stop))
-        descriptor_uids = [doc['uid'] for doc in self._descriptors]
+                itertools.islice([('start', self._get_run_start()),
+                        ('descriptor', descriptor)], start, stop))
+
         skip = max(0, start - len(payload))
         limit = stop - start - len(payload)
         if limit > 0:
+            events = event_model.rechunk_event_pages(
+                        self._get_event_pages(descriptor_uid=descriptor['uid']
+                                              skip, limit),
+                        chunk_size)
+            filler('descriptor', descriptor)
 
-            events = itertools.islice(interlace_event_pages(
-                    *(self._get_event_pages(descriptor_uid=descriptor_uid)
-                      for descriptor_uid in descriptor_uids)), skip, limit)
-
-            for descriptor in self._descriptors:
-                self.filler('descriptor', descriptor)
-            for event in events:
-                self._fill(event)  # in place (for now)
-                payload.append(('event', event))
+            for event_page in events:
+                self._fill(filler, event_page)  # in place (for now)
+                payload.append(('event_page', event_page))
             if i == self.npartitions - 1 and self._run_stop_doc is not None:
                 payload.append(('stop', self._run_stop_doc))
         for _, doc in payload:
             doc.pop('_id', None)
         return payload
 
-    def _fill(self, event, last_datum_id=None):
+    def _fill(self, filler, event_page, last_datum_id=None):
         try:
-            self.filler('event', event)
+            filler('event_page', event)
         except event_model.UnresolvableForeignKeyError as err:
             datum_id = err.key
             if datum_id == last_datum_id:
@@ -708,11 +701,11 @@ class BlueskyRun(intake.catalog.Catalog):
                 resource_uid = self._lookup_resource_for_datum(datum_id)
 
             resource = self._get_resource(uid=resource_uid)
-            self.filler('resource', resource)
+            filler('resource', resource)
             # Pre-fetch all datum for this resource.
             for datum_page in self._get_datum_pages(
                     resource_uid=resource_uid):
-                self.filler('datum_page', datum_page)
+                filler('datum_page', datum_page)
             # TODO -- When to clear the datum cache in filler?
 
             # Re-enter and try again now that the Filler has consumed the

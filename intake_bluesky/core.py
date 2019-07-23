@@ -686,7 +686,7 @@ class BlueskyRun(intake.catalog.Catalog):
 
     def _fill(self, filler, event_page, last_datum_id=None):
         try:
-            filler('event_page', event)
+            filler('event_page', event_page)
         except event_model.UnresolvableForeignKeyError as err:
             datum_id = err.key
             if datum_id == last_datum_id:
@@ -712,7 +712,7 @@ class BlueskyRun(intake.catalog.Catalog):
             # missing Datum. There might be another missing Datum in this same
             # Event document (hence this re-entrant structure) or might be good
             # to go.
-            self._fill(event, last_datum_id=datum_id)
+            self._fill(event_page, last_datum_id=datum_id)
 
     def read(self):
         raise NotImplementedError(

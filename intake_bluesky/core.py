@@ -680,8 +680,6 @@ class BlueskyRun(intake.catalog.Catalog):
                 payload.append(('event_page', event_page))
             if i == self.npartitions - 1 and self._run_stop_doc is not None:
                 payload.append(('stop', self._run_stop_doc))
-        for _, doc in payload:
-            doc.pop('_id', None)
         return payload
 
     def _fill(self, filler, event_page, last_datum_id=None):
